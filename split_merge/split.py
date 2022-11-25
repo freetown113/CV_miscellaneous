@@ -5,6 +5,7 @@ from PIL import Image
 
 ### ERROR handling and undefined input handling
 ### EXCEPTIONS right handling behaviour
+### add logic to use shifts
  
 class Slicer:
     def __init__(self,
@@ -54,19 +55,20 @@ class Slicer:
             return arg
 
     def slice(self):
-        h, w = self.image.shape[:2]
-        row_spare, col_spare = h % self.height, w % self.width
+        height, width = self.image.shape[:2]
+        row_spare, col_spare = height % self.height, width % self.width
 
-        v_chunks = self.split_reminder(self.image, self.height, axis=0) \
-            if row_spare else self.split_evenly(self.image, self.height,
+        v_chunks = self.split_reminder(self.image, self.width, axis=1) \
+            if row_spare else self.split_evenly(self.image, self.width,
                                                 axis=0)
 
-        for w_idx, chank in enumerate(v_chunks):
-            h_chunks = self.split_reminder(chank, self.width, axis=1) \
-                if col_spare else self.split_evenly(self.image, self.width,
+        for v_idx, chank in enumerate(v_chunks):
+            h_chunks = self.split_reminder(chank, self.height, axis=0) \
+                if col_spare else self.split_evenly(self.image, self.height,
                                                     axis=1)
             for h_idx, img in enumerate(h_chunks):
-                self.save_image(img, w_idx, h_idx)
+                self.save_image(img, h_idx, v_idx, self.height, self.width,
+                                width, height)
 
     def split_evenly(self,
                      array: np.array,
@@ -86,12 +88,19 @@ class Slicer:
 
     def save_image(self,
                    array: np.array,
+                   col: int,
                    row: int,
-                   col: int
+                   patch_w: int,
+                   patch_h: int,
+                   img_w: int,
+                   img_h: int
                    ) -> None:
-        Image.fromarray(array).save(os.path.join(self.out_path, str(row)
-                                                 + '_' + str(col) +
-                                                 '_image.jpg'))
+        Image.fromarray(array).save(os.path.join(self.out_path, str(col) + '_'
+                                                 + str(row) + '_' +
+                                                 str(patch_w) + '_' +
+                                                 str(patch_h) + '_' +
+                                                 str(img_w) + '_' + str(img_h)
+                                                 + '_image.jpg'))
 
 
 def main(args):
