@@ -5,7 +5,10 @@ import numpy as np
 import os
 
 
-def closet_square(number):
+def closet_square(number: int) -> int:
+    '''For input size that indicates the number of provided elements,
+    find the size of the square grid of mininum size that can store all
+    these elements.'''
     square = math.sqrt(number)
     match number:
         case 1:
@@ -18,7 +21,14 @@ def closet_square(number):
             return int((math.floor(square) + 1) ** 2)
 
 
-def combine_videos(path_to_videos, output):
+def combine_videos(path_to_videos: str, 
+                   output: str
+                   ) -> None:
+    '''Open video files provided through the path to the folder. Combine them
+    into the squre shape grid. Save resulting video file.
+    input: path_to_videos - string containig path to the folder with videos
+           output - path to resulting video file
+    '''
     videos_list = [name for name in os.listdir(path_to_videos)
                    if os.path.isfile(os.path.join(path_to_videos, name))]
 
@@ -41,7 +51,12 @@ def combine_videos(path_to_videos, output):
                              frame_rate,
                              (grid.shape[1], grid.shape[0]))
 
-    def insert_frame_by_frame(single_frame, output):
+    def insert_frame_by_frame(single_frame: str, output: str) -> None:
+        '''Takes single frame from each video file. Puts it to the
+        corresponding place in the grid. Adds text containing the name
+        of the file on the frame. When all videos take their places into
+        the grid it saves the grid as the next frame of the resulting video.
+        '''
         while True:
             for idx, video in enumerate(single_frame):
                 match video.read():
