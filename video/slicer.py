@@ -5,19 +5,29 @@ from multiprocessing import Pool, cpu_count, current_process
 import os
 
 
-def slice_and_save(input):
+def slice_and_save(input: str,
+                   slicing_type: str
+                   ) -> None:
+    '''Principal function that gets one video and save all frames or
+    frame per second in the corresponding folder'''
     match input:
         case path_to_video, file_name, output_path:
             video = cv2.VideoCapture(os.path.join(path_to_video, file_name))
             if not video.isOpened():
                 raise RuntimeError(f'Cannot open video {path_to_video}')
+            frame_rate = video.get(5)
             for i in count():
                 match video.read():
                     case True, frame:
                         if not os.path.exists(f := os.path.join(output_path,
                                               os.path.splitext(file_name)[0])):
                             os.makedirs(f)
-                        cv2.imwrite(os.path.join(f, str(i) + '.jpg'), frame)
+                        if slicing_type == 'seconds' and i % frame_rate:
+                            cv2.imwrite(os.path.join(f, str(i) + '.jpg'),
+                                        frame)
+                        else:
+                            cv2.imwrite(os.path.join(f, str(i) + '.jpg'),
+                                        frame)
                     case False, frame:
                         print(f'{current_process()} process wrote {i} images \
                                 in {f}')
@@ -27,13 +37,26 @@ def slice_and_save(input):
                                   Tuple[str, str], got {type(other)}')
 
 
-def slice_video(path_to_videos, output_path):
+def slice_video(path_to_videos: str,
+                output_path: str,
+                num_process: int,
+                slicing_type: str
+                ) -> None:
+    '''Main function: Gets a path to the folder containing videos.
+    Makes a list of all the files in the folder and launchs principal 
+    function in the number of processes provided by user'''
     videos_list = [(path_to_videos, name, output_path) for name in
                    os.listdir(path_to_videos)
                    if os.path.isfile(os.path.join(path_to_videos, name))]
 
-    pool = Pool(cpu_count())
-    pool.map(slice_and_save, videos_list)
+    match num_process:
+        case None:
+            process = cpu_count()
+        case other:
+            process = other
+
+    pool = Pool(process)
+    pool.map(slice_and_save, (videos_list, slicing_type))
 
 
 if __name__ == '__main__':
@@ -44,5 +67,8 @@ if __name__ == '__main__':
                         help='path to the directory contining video file')
     parser.add_argument('--slicing_type', type=str, default='frames',
                         help='path to the directory contining video file')
+    parser.add_argument('--num_process', type=str, default=None,
+                        help='number of process to run for handling data')
     arguments = parser.parse_args()
-    slice_video(arguments.path_to_videos, arguments.ouptut_path)
+    slice_video(arguments.path_to_videos, arguments.ouptut_path,
+                arguments.num_process, arguments.slicing_type)
