@@ -23,6 +23,7 @@ class Slicer:
         self.cols = self.__check_values(x_shift, 'x_shift')
         self.rows = self.__check_values(y_shift, 'y_shift')
         self.out_path = self.__check_dir(output_path)
+        self.update_shifts()
 
     def __check_dir(self,
                     path: str
@@ -37,6 +38,15 @@ class Slicer:
                      ) -> np.array:
         '''Opens image and convert it to numpy array'''
         return np.array(Image.open(image_path))
+
+    def update_shifts(self) -> None:
+        '''Check provided shift by axis arguments, and cut image accordingly
+        if any of them is more than 0.
+        '''
+        if self.cols:
+            self.image = self.image[:, self.cols:, :]
+        if self.rows:
+            self.image = self.image[self.rows:, :, :]
 
     def __check_values(self,
                        arg: int,
