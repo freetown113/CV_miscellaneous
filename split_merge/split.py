@@ -3,11 +3,12 @@ import numpy as np
 import os
 from PIL import Image
 
-### ERROR handling and undefined input handling
-### EXCEPTIONS right handling behaviour
-### add logic to use shifts
- 
+
 class Slicer:
+    '''Class that contains all methods necessaries to cut an image into
+    chunks according to provided parameters of required chunk size and
+    save them as images in provided directiry
+    '''
     def __init__(self,
                  image_path: str,
                  height: int,
@@ -23,7 +24,10 @@ class Slicer:
         self.rows = self.__check_values(y_shift, 'y_shift')
         self.out_path = self.__check_dir(output_path)
 
-    def __check_dir(self, path):
+    def __check_dir(self,
+                    path: str
+                    ) -> str:
+        '''Checks if provided directory exists and create it if not'''
         if not os.path.exists(path):
             os.makedirs(path)
         return path
@@ -31,30 +35,46 @@ class Slicer:
     def __open_image(self,
                      image_path: str
                      ) -> np.array:
+        '''Opens image and convert it to numpy array'''
         return np.array(Image.open(image_path))
 
-    def __check_values(self, arg, name):
-        if not isinstance(arg, int):
-            raise ValueError(f'Provide {name} argument as an int, you \
-                               provided argument of type {type(arg)}')
-        h, w = self.image.shape[:2]
-        if name == 'height' and arg > h or name == 'width' and arg > w:
-            raise ValueError(f'Patch size cannot be more than image size \
-                               by any dimension. You provided patch height: \
-                               {self.height} and width: {self.width}, \
-                               while image height: {h} and width: {w}')
-        if (name == 'height' or name == 'width') and arg <= 0:
-            raise ValueError(f'Patch size cannot be less than 1 by any \
-                               dimension. You provided {arg} value for \
-                               {name} argument.')
-        if (name == 'x_shift' or name == 'y_shift') and arg < 0:
-            raise ValueError(f'The shift cannot be negative by any \
-                               dimension. You provided {arg} value for \
-                               {name} argument.')
-        else:
-            return arg
+    def __check_values(self,
+                       arg: int,
+                       name: str
+                       ) -> int:
+        match arg:
+            case int():
+                h, w = self.image.shape[:2]
+                match name:
+                    case 'height' if arg > h:
+                        raise ValueError(f'Patch height cannot be more than'
+                                         f'image height. You provided patch'
+                                         f'height: {self.height} while image'
+                                         f'height: {h}')
+                    case 'width' if arg > w:
+                        raise ValueError(f'Patch height cannot be more than'
+                                         f'image height. You provided patch'
+                                         f'width: {self.width} while image'
+                                         f'width: {w}')
+                    case 'width' | 'height' if arg <= 0:
+                        raise ValueError(f'Patch size must be more than 0'
+                                         f'by any dimension. You provided'
+                                         f'{arg} value for {name} argument.')
+                    case 'x_shift' | 'y_shift' if arg < 0:
+                        raise ValueError(f'The shift cannot be negative by'
+                                         f'any dimension. You provided {arg}'
+                                         f'value for {name} argument.')
+                return arg
+            case _:
+                raise ValueError(f'{name} argument must be of {int()}, you'
+                                 f'provided argument of type {type(arg)}'
+                                 f'instead')
 
-    def slice(self):
+    def slice(self) -> None:
+        '''Depending on image size and required patch size splits image
+        into patches accordint to appropriate logic. Saves patches as
+        separate images of PNG format to the provided directory.
+        '''
         height, width = self.image.shape[:2]
         row_spare, col_spare = height % self.height, width % self.width
 
@@ -75,6 +95,9 @@ class Slicer:
                      chunk_size: int,
                      axis: int = 0
                      ) -> np.array:
+        '''Splits numpy array into patches according to requested patch size
+        when the whole array can be splited into patches of the same size
+        '''
         return np.array_split(array, np.ceil(array.shape[axis] / chunk_size),
                               axis=axis)
 
@@ -83,6 +106,9 @@ class Slicer:
                        chunk_size: int,
                        axis: int = 0
                        ) -> np.array:
+        '''Splits numpy array into patches according to requested patch size
+        when the whole array cannot be splited into patches of the same size
+        '''
         indices = np.arange(chunk_size, array.shape[axis], chunk_size)
         return np.array_split(array, indices, axis)
 
@@ -95,6 +121,9 @@ class Slicer:
                    img_w: int,
                    img_h: int
                    ) -> None:
+        '''Saves patches with coded info about patch size and original image
+        parameters in corresponding patch name
+        '''
         Image.fromarray(array).save(os.path.join(self.out_path, str(col) + '_'
                                                  + str(row) + '_' +
                                                  str(patch_w) + '_' +
