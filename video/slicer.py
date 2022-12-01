@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 import cv2
-from itertools import count
+from itertools import count, repeat
 from multiprocessing import Pool, cpu_count, current_process
 import os
 
@@ -22,12 +22,14 @@ def slice_and_save(input: str,
                         if not os.path.exists(f := os.path.join(output_path,
                                               os.path.splitext(file_name)[0])):
                             os.makedirs(f)
-                        if slicing_type == 'seconds' and i % frame_rate:
+                        if slicing_type == 'seconds' and i % frame_rate == 0:
+                            cv2.imwrite(os.path.join(f, str(i) + '.jpg'),
+                                        frame)
+                        elif slicing_type == 'frames':
                             cv2.imwrite(os.path.join(f, str(i) + '.jpg'),
                                         frame)
                         else:
-                            cv2.imwrite(os.path.join(f, str(i) + '.jpg'),
-                                        frame)
+                            pass
                     case False, frame:
                         print(f'{current_process()} process wrote {i} images \
                                 in {f}')
@@ -56,7 +58,7 @@ def slice_video(path_to_videos: str,
             process = other
 
     pool = Pool(process)
-    pool.map(slice_and_save, (videos_list, slicing_type))
+    pool.starmap(slice_and_save, zip(videos_list, repeat(slicing_type)))
 
 
 if __name__ == '__main__':
@@ -65,7 +67,8 @@ if __name__ == '__main__':
                         help='path to the directory contining video file')
     parser.add_argument('--ouptut_path', type=str, default='output_videos',
                         help='path to the directory contining video file')
-    parser.add_argument('--slicing_type', type=str, default='frames',
+    parser.add_argument('--slicing_type', type=str, default='seconds',
+                        choices=['frames', 'seconds'],
                         help='path to the directory contining video file')
     parser.add_argument('--num_process', type=str, default=None,
                         help='number of process to run for handling data')
