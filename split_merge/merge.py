@@ -6,6 +6,9 @@ from typing import Tuple
 
 
 class Glue:
+    '''This class contains all methods necessary to assemble fragmented
+    parts into the whole image like it was before splitting
+    '''
     def __init__(self,
                  path_to_folder: str,
                  output_path: str
@@ -17,11 +20,15 @@ class Glue:
     def __open_image(self,
                      image_path: str
                      ) -> np.array:
+        '''Opening image and convert it to numpy array'''
         return np.array(Image.open(image_path))
 
     def __get_image_info(self,
                          img
                          ) -> Tuple[int, int, int, int, int]:
+        '''Collecting information about ofiginal image parameters and
+        patches parameters based on info coded into patches names
+        '''
         name, _ = os.path.splitext(img)
 
         patch_w, patch_h, img_w, img_h = name.split('_')[2:-1]
@@ -43,6 +50,11 @@ class Glue:
         return patch_w, patch_h, img_w, img_h, channels
 
     def assamble(self) -> None:
+        '''Principal method that makes a list of patches containing in the
+        folder and based on info about original image and patches construct
+        a grid of size of ofiginal image. Then openeach patch and put it in
+        corresponding cell of the grid to reconstruct the original image.
+        '''
         self.images = [name for name in os.listdir(self.path)
                        if os.path.isfile(os.path.join(self.path, name))]
 
@@ -61,12 +73,28 @@ class Glue:
                  col * patch_w: col * patch_w + width,
                  :] = array
 
-        Image.fromarray(grid).save(self.out_path)
+        Image.fromarray(grid).save(self.out_path, 'PNG')
+
+
+def compare_images(path_image1, path_image2):
+    '''Function that conmare two images provided and retur a message
+    indication if there some difference between them or not
+    '''
+    img1, img2 = [np.array(Image.open(path)) for path
+                  in (path_image1, path_image2)]
+
+    result = np.array_equal(img1, img2)
+    match result:
+        case True:
+            print('Images are absolutely equal')
+        case False:
+            print('There are differences in images')
 
 
 def main(args):
     assembler = Glue(args.input_path, args.output)
     assembler.assamble()
+    compare_images(args.output, args.original_img_path)
 
 
 if __name__ == '__main__':
@@ -75,6 +103,8 @@ if __name__ == '__main__':
                                               images to be merged',
                         default='split_output', type=str)
     parser.add_argument('--output', help='result images directory',
-                        default='./image.jpg', type=str)
+                        default='./image.png', type=str)
+    parser.add_argument('--original_img_path', help='path to original image',
+                        default='./Cape_Town.jpg', type=str)                 
     arguments = parser.parse_args()
     main(arguments)

@@ -100,7 +100,7 @@ class Slicer:
                                                  str(patch_w) + '_' +
                                                  str(patch_h) + '_' +
                                                  str(img_w) + '_' + str(img_h)
-                                                 + '_image.jpg'))
+                                                 + '_image.png'), 'PNG')
 
 
 def main(args):
