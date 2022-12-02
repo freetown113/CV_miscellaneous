@@ -45,7 +45,7 @@ def slice_video(path_to_videos: str,
                 slicing_type: str
                 ) -> None:
     '''Main function: Gets a path to the folder containing videos.
-    Makes a list of all the files in the folder and launchs principal 
+    Makes a list of all the files in the folder and launchs principal
     function in the number of processes provided by user'''
     videos_list = [(path_to_videos, name, output_path) for name in
                    os.listdir(path_to_videos)

@@ -21,7 +21,7 @@ def closet_square(number: int) -> int:
             return int((math.floor(square) + 1) ** 2)
 
 
-def combine_videos(path_to_videos: str, 
+def combine_videos(path_to_videos: str,
                    output: str
                    ) -> None:
     '''Open video files provided through the path to the folder. Combine them
